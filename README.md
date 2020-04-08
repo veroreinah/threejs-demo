@@ -21,5 +21,5 @@ If you install **lite-server** globally, you have to run `lite-server` in the pr
 After any change in the `index.js` file, you have to run the following command in order to compile the JavaScript.
 
 ```
-npx webpack
+npx webpack --mode=development
 ```

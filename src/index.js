@@ -1,4 +1,5 @@
-const THREE = require("three");
+import * as THREE from "three";
+import { cubesOptions } from "./cubes";
 
 let camera, renderer, scene;
 
@@ -9,6 +10,7 @@ let lon = 200;
 let onMouseDownLon = 0;
 let lat = 0;
 let onMouseDownLat = 0;
+let cameraTarget = new THREE.Vector3(0, 0, 0);
 
 init();
 animate();
@@ -21,7 +23,6 @@ function init() {
     aspectRatio: window.innerWidth / window.innerHeight,
     nearClippingPane: 0.1,
     farClippingPane: 1000,
-    target: new THREE.Vector3(0, 0, 0),
   };
   camera = new THREE.PerspectiveCamera(
     cameraOptions.fieldOfView,
@@ -29,7 +30,6 @@ function init() {
     cameraOptions.nearClippingPane,
     cameraOptions.farClippingPane
   );
-  camera.target = cameraOptions.target;
 
   renderer = new THREE.WebGLRenderer();
   renderer.setSize(window.innerWidth, window.innerHeight);
@@ -38,7 +38,7 @@ function init() {
 
   scene = new THREE.Scene();
 
-  const geometry = new THREE.SphereBufferGeometry();
+  const geometry = new THREE.SphereBufferGeometry(20);
   // invert the geometry on the x-axis so that all of the faces point inward
   geometry.scale(-1, 1, 1);
 
@@ -49,7 +49,31 @@ function init() {
 
   scene.add(panorama);
 
+  // Axes (if camera is at 0, 0, 0 axes will not be seen)
+  var axesHelper = new THREE.AxesHelper(20);
+  scene.add(axesHelper);
+
+  // camera.position.x = 3;
+  // camera.position.y = 3;
+  // camera.position.z = 3;
+
+  addCubes();
   addListeners();
+}
+
+function addCubes() {
+  cubesOptions.forEach((options) => {
+    const geometry = new THREE.BoxGeometry(
+      options.width,
+      options.height,
+      options.height
+    );
+    geometry.translate(options.x, options.y, options.z);
+    const material = new THREE.MeshBasicMaterial({ color: options.color });
+    const cube = new THREE.Mesh(geometry, material);
+
+    scene.add(cube);
+  });
 }
 
 function animate() {
@@ -62,22 +86,22 @@ function update() {
   const phi = THREE.MathUtils.degToRad(90 - lat);
   const theta = THREE.MathUtils.degToRad(lon);
 
-  camera.target.x = 500 * Math.sin(phi) * Math.cos(theta);
-  camera.target.y = 500 * Math.cos(phi);
-  camera.target.z = 500 * Math.sin(phi) * Math.sin(theta);
+  cameraTarget.x = 500 * Math.sin(phi) * Math.cos(theta);
+  cameraTarget.y = 500 * Math.cos(phi);
+  cameraTarget.z = 500 * Math.sin(phi) * Math.sin(theta);
 
-  camera.lookAt(camera.target);
+  camera.lookAt(cameraTarget);
 
   renderer.render(scene, camera);
 }
 
 function onPointerStart(event) {
-  console.log('EVENT', 'onPointerStart');
+  console.log("EVENT", "onPointerStart");
 
   isUserInteracting = true;
 
-  const clientX = event.clientX || event.touches[0].clientX;
-  const clientY = event.clientY || event.touches[0].clientY;
+  const clientX = event.clientX || (event.touches ? event.touches[0].clientX : 0);
+  const clientY = event.clientY || (event.touches ? event.touches[0].clientY : 0);
 
   onMouseDownMouseX = clientX;
   onMouseDownMouseY = clientY;
@@ -87,11 +111,11 @@ function onPointerStart(event) {
 }
 
 function onPointerMove(event) {
-  console.log('EVENT', 'onPointerMove');
+  console.log("EVENT", "onPointerMove");
 
   if (isUserInteracting) {
-    const clientX = event.clientX || event.touches[0].clientX;
-    const clientY = event.clientY || event.touches[0].clientY;
+    const clientX = event.clientX || (event.touches ? event.touches[0].clientX : 0);
+    const clientY = event.clientY || (event.touches ? event.touches[0].clientY : 0);
 
     lon = (onMouseDownMouseX - clientX) * 0.1 + onMouseDownLon;
     lat = (clientY - onMouseDownMouseY) * 0.1 + onMouseDownLat;
@@ -99,7 +123,7 @@ function onPointerMove(event) {
 }
 
 function onPointerUp() {
-  console.log('EVENT', 'onPointerUp');
+  console.log("EVENT", "onPointerUp");
 
   isUserInteracting = false;
 }
@@ -116,7 +140,7 @@ function addListeners() {
   document.addEventListener(
     "wheel",
     function (event) {
-      console.log('EVENT', 'wheel');
+      console.log("EVENT", "wheel");
 
       const fov = camera.fov + event.deltaY * 0.05;
 
@@ -130,7 +154,7 @@ function addListeners() {
   document.addEventListener(
     "dragover",
     function (event) {
-      console.log('EVENT', 'dragover');
+      console.log("EVENT", "dragover");
 
       event.preventDefault();
       event.dataTransfer.dropEffect = "copy";
@@ -141,7 +165,7 @@ function addListeners() {
   document.addEventListener(
     "dragenter",
     function () {
-      console.log('EVENT', 'dragenter');
+      console.log("EVENT", "dragenter");
 
       document.body.style.opacity = 0.5;
     },
@@ -151,7 +175,7 @@ function addListeners() {
   document.addEventListener(
     "dragleave",
     function () {
-      console.log('EVENT', 'dragleave');
+      console.log("EVENT", "dragleave");
 
       document.body.style.opacity = 1;
     },
@@ -161,8 +185,8 @@ function addListeners() {
   document.addEventListener(
     "drop",
     function (event) {
-      console.log('EVENT', 'drop');
-      
+      console.log("EVENT", "drop");
+
       event.preventDefault();
 
       const reader = new FileReader();
@@ -184,7 +208,7 @@ function addListeners() {
   window.addEventListener(
     "resize",
     function () {
-      console.log('EVENT', 'resize');
+      console.log("EVENT", "resize");
 
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
