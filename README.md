@@ -2,6 +2,10 @@
 
 This project has been developed following the [panorama / equirectangular](https://threejs.org/examples/#webgl_panorama_equirectangular) example in three.js website.
 
+You can see a working demo in the following link:
+
+🖥 [three.js demo](https://veroreinah.github.io/threejs-demo/index.html)
+
 ## Requisites
 
 - Install project dependencies:
